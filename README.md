@@ -6,8 +6,7 @@ A apresentação é uma página com tema espacial: rolar a página (ou usar ← 
 
 ## Como apresentar pelo Google Colab
 
-1. Rode o notebook até as células de Resolução e Resultados.
-2. Rode a célula de `colab/celula_apresentacao.py`. Ela lê a solução que o Pyomo calculou, baixa o `apresentacao.html` deste repositório, injeta os dados e abre a página (link para tela cheia e prévia embutida).
+Cole `colab/celula_apresentacao.py` numa célula no fim do notebook e use "Executar tudo". A célula lê a solução que o Pyomo calculou, baixa o `apresentacao.html` deste repositório, injeta os dados e abre a página (link para tela cheia e prévia embutida). Rodada sozinha, sem o modelo resolvido, ela abre com a solução original.
 
 Se um custo for alterado no notebook, a apresentação mostra o novo resultado.
 
