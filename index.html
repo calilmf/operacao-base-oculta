@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operação Base Oculta</title>
+  <meta name="description" content="Modelo de Programação Linear Inteira Mista para localização de bases e distribuição de suprimentos — trabalho de MMQD." />
+  <script>window.SOLUCAO_COLAB = null;</script>
+</head>
+<body>
+  <canvas id="galaxia" aria-hidden="true"></canvas>
+  <div id="labels" aria-hidden="true"></div>
+
+  <nav id="hud" aria-label="Navegação da apresentação">
+    <ol id="hud-trilha"></ol>
+  </nav>
+  <div id="hud-dica">role ou use <kbd>←</kbd> <kbd>→</kbd> · <kbd>F</kbd> tela cheia</div>
+
+  <main id="conteudo">
+
+    <!-- 1. ABERTURA -->
+    <section class="sec" id="abertura" data-titulo="Abertura" data-stops="hero">
+      <div class="palco">
+        <div class="painel-centro abertura">
+          <p class="prologo" data-anim>Há muito tempo, numa galáxia muito, muito distante...</p>
+          <h1 data-anim>Operação<br /><span>Base Oculta</span></h1>
+          <p class="sub" data-anim>Localização de instalações e logística de distribuição<br />Programação Linear Inteira Mista</p>
+          <p class="time" data-anim>Rodrigo · Vitor · Calil · Giovana · Julia Paz · Ana Gabs</p>
+          <div class="seta" data-anim>role para saltar ao hiperespaço<span>↓</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TRIPULAÇÃO -->
+    <section class="sec" id="tripulacao" data-titulo="Tripulação" data-stops="tripulacao">
+      <div class="palco">
+        <div class="painel largo">
+          <p class="kicker" data-anim>A tripulação</p>
+          <h2 data-anim>Cada integrante trouxe uma peça do modelo</h2>
+          <div class="crew" id="crew"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. MISSÃO -->
+    <section class="sec" id="missao" data-titulo="A missão" data-stops="missao">
+      <div class="palco">
+        <div class="painel esquerda">
+          <p class="kicker" data-anim>A missão</p>
+          <h2 data-anim>O Império aperta o cerco</h2>
+          <p data-anim>A Aliança Rebelde precisa montar bases secretas de suprimentos e abastecer suas cinco frentes de batalha com comida, peças de X-Wing e kits médicos.</p>
+          <div class="stats" data-anim>
+            <div><b>4</b><span>planetas candidatos a base</span></div>
+            <div><b>5</b><span>frentes de batalha</span></div>
+            <div><b>200</b><span>caixas por mês</span></div>
+            <div><b>≤ 3</b><span>bases (risco de rastreamento)</span></div>
+          </div>
+          <p class="pergunta" data-anim>Quais bases abrir e quantas caixas mandar de cada base para cada frente, com o <b>menor custo total</b> (montagem + transporte)?</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. DADOS -->
+    <section class="sec" id="dados" data-titulo="Os dados" data-stops="dados-0,dados-1,dados-2,dados-3,dados-frentes">
+      <div class="palco">
+        <div class="painel esquerda" id="dados-painel"></div>
+      </div>
+    </section>
+
+    <!-- 5. MODELO -->
+    <section class="sec" id="modelo" data-titulo="O modelo" data-stops="modelo-0,modelo-1,modelo-2,modelo-3,modelo-4">
+      <div class="palco">
+        <div class="painel holo" id="modelo-painel"></div>
+      </div>
+    </section>
+
+    <!-- 6. RESOLUÇÃO -->
+    <section class="sec" id="resolucao" data-titulo="Resolução" data-stops="resolucao-0,resolucao-1">
+      <div class="palco">
+        <div class="painel direita terminal" id="resolucao-painel"></div>
+      </div>
+    </section>
+
+    <!-- 7. RESULTADOS -->
+    <section class="sec" id="resultados" data-titulo="Resultados" data-stops="res-bases,res-rotas,res-custo">
+      <div class="palco">
+        <div class="painel esquerda" id="resultados-painel"></div>
+        <div class="legenda-rotas" id="legenda-rotas"></div>
+      </div>
+    </section>
+
+    <!-- 8. INTERPRETAÇÃO -->
+    <section class="sec" id="conclusoes" data-titulo="Interpretação" data-stops="conc-d0,conc-d1,conc-seg,conc-cap">
+      <div class="palco">
+        <div class="painel esquerda" id="conclusoes-painel"></div>
+      </div>
+    </section>
+
+    <!-- 9. MUNDO REAL -->
+    <section class="sec" id="mundo" data-titulo="Mundo real" data-stops="mundo">
+      <div class="palco">
+        <div class="painel largo">
+          <p class="kicker" data-anim>Aplicabilidade</p>
+          <h2 data-anim>Fora da galáxia, o dilema é o mesmo</h2>
+          <p data-anim>Abrir muitas unidades sai caro; abrir poucas deixa as entregas longas e caras. Esse é o problema de localização de instalações, usado todos os dias em:</p>
+          <div class="cards4">
+            <div class="card" data-anim><b>Centros de distribuição</b><span>e-commerce e supermercados decidindo onde abrir armazéns</span></div>
+            <div class="card" data-anim><b>Saúde</b><span>hospitais de campanha e postos de vacinação com cadeia fria</span></div>
+            <div class="card" data-anim><b>Desastres naturais</b><span>bases de ajuda humanitária perto das áreas atingidas</span></div>
+            <div class="card" data-anim><b>Energia e telecom</b><span>subestações e antenas atendendo regiões de consumo</span></div>
+          </div>
+          <p class="nota" data-anim><b>Limites do nosso modelo:</b> demanda e custos conhecidos e fixos, um único mês, sem tempo de viagem. Próximos passos: demanda incerta (cenários), vários períodos e risco de interceptação por rota.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. E SE...? -->
+    <section class="sec" id="ese" data-titulo="E se...?" data-stops="ese">
+      <div class="palco">
+        <div class="painel direita" id="ese-painel"></div>
+      </div>
+    </section>
+
+    <!-- 11. CRÉDITOS -->
+    <section class="sec" id="creditos" data-titulo="Fim" data-stops="creditos">
+      <div class="palco">
+        <div class="painel-centro">
+          <p class="kicker" data-anim>Missão cumprida</p>
+          <h2 class="fim" data-anim><span>Que a otimização</span> <span>esteja com vocês</span></h2>
+          <p class="time" data-anim>General Rodrigo · Calil · Julia Paz · Vitor · Giovana · Ana Gabs</p>
+          <p class="nota centro" data-anim>Modelo: Python + Pyomo + GLPK · Apresentação: Three.js + GSAP<br />Trabalho de MMQD — Atividade Extra: Modelagem Criativa</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

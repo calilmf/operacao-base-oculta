@@ -1,0 +1,20 @@
+{
+  "status": "optimal",
+  "custo_total": 1535,
+  "custo_montagem": 750,
+  "custo_transporte": 785,
+  "bases": [
+    { "nome": "Hoth",    "aberta": 0, "capacidade": 120, "enviado": 0 },
+    { "nome": "Yavin 4", "aberta": 1, "capacidade": 150, "enviado": 125 },
+    { "nome": "Dagobah", "aberta": 1, "capacidade": 80,  "enviado": 75 },
+    { "nome": "Endor",   "aberta": 0, "capacidade": 100, "enviado": 0 }
+  ],
+  "rotas": [
+    { "de": "Yavin 4", "para": "Naboo",    "caixas": 50, "custo_unit": 5 },
+    { "de": "Yavin 4", "para": "Bespin",   "caixas": 30, "custo_unit": 7 },
+    { "de": "Yavin 4", "para": "Kashyyyk", "caixas": 45, "custo_unit": 3 },
+    { "de": "Dagobah", "para": "Tatooine", "caixas": 40, "custo_unit": 3 },
+    { "de": "Dagobah", "para": "Lothal",   "caixas": 35, "custo_unit": 2 }
+  ],
+  "restricao_seguranca": { "limite": 3, "usado": 2 }
+}
