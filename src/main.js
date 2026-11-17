@@ -71,6 +71,9 @@ $('#crew').innerHTML = crew.map(([n, p, d, m]) => `
     <div><b>${n}</b><em>${p}</em><p>${d}</p><span class="tag">${m}</span></div>
   </div>`).join('');
 
+$('#m-demanda').textContent = DEMANDA_TOTAL;
+$('#m-max').textContent = `≤ ${MAX_BASES}`;
+
 // --- Dados ---
 function barrasRotas(i) {
   return FRENTES.map((f, j) => {
@@ -91,7 +94,7 @@ $('#dados-painel').innerHTML = BASES.map((b, i) => `
   </div>`).join('') + `
   <div class="passo" data-passo="4">
     <p class="kicker" data-anim>Relatório da Julia Paz · frentes de batalha</p>
-    <h2 data-anim>200 caixas por mês</h2>
+    <h2 data-anim>${DEMANDA_TOTAL} caixas por mês</h2>
     <table class="tabela" data-anim>
       <tr><th></th>${FRENTES.map((f) => `<th>${f.nome}</th>`).join('')}</tr>
       <tr><td>Demanda</td>${FRENTES.map((f) => `<td><b>${f.demanda}</b></td>`).join('')}</tr>
@@ -158,13 +161,13 @@ const codigo = [
   ['', 'model.Y = pyo.Var([1, 2, 3, 4], within=pyo.Binary)'],
   ['', 'model.X = pyo.Var([1, 2, 3, 4], [1, 2, 3, 4, 5], within=pyo.NonNegativeIntegers)'],
   ['', ''],
-  ['', 'obj_sum = (400*model.Y[1] + 500*model.Y[2] + 250*model.Y[3] + 350*model.Y[4]'],
-  ['', '           + 8*model.X[1,1] + 6*model.X[1,2] + 3*model.X[1,3] + ...'],
+  ['', `obj_sum = (${BASES.map((b, i) => `${b.custo}*model.Y[${i + 1}]`).join(' + ')}`],
+  ['', `           + ${CUSTO[0].slice(0, 3).map((c, j) => `${c}*model.X[1,${j + 1}]`).join(' + ')} + ...`],
   ['', 'model.obj = pyo.Objective(expr=obj_sum, sense=pyo.minimize)'],
   ['', ''],
-  ['', 'model.C1 = pyo.Constraint(expr=model.X[1,1] + model.X[2,1] + model.X[3,1] + model.X[4,1] == 40)'],
+  ['', `model.C1 = pyo.Constraint(expr=model.X[1,1] + model.X[2,1] + model.X[3,1] + model.X[4,1] == ${FRENTES[0].demanda})`],
   ['c', '# ... C2 a C9: demanda e capacidade, todas escritas na forma literal'],
-  ['', 'model.C10 = pyo.Constraint(expr=model.Y[1] + model.Y[2] + model.Y[3] + model.Y[4] <= 3)'],
+  ['', `model.C10 = pyo.Constraint(expr=model.Y[1] + model.Y[2] + model.Y[3] + model.Y[4] <= ${MAX_BASES})`],
   ['', ''],
   ['', "opt = SolverFactory('glpk')"],
   ['', 'results = opt.solve(model)'],
