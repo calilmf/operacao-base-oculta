@@ -3,7 +3,7 @@
 # Usa o `model` resolvido no notebook, se existir; rodada sozinha,
 # abre com a solução original (Z = 1535).
 # ============================================================
-import json, os, subprocess, time, urllib.request
+import json, os, urllib.request
 from google.colab import output
 
 def montar_dados():
@@ -62,20 +62,47 @@ marcador = "window.SOLUCAO_COLAB = null;"
 assert marcador in html, "Página da apresentação não reconhecida"
 if dados:
     html = html.replace(marcador, "window.SOLUCAO_COLAB = " + json.dumps(dados) + ";")
-os.makedirs("/content/apresentacao", exist_ok=True)
-with open("/content/apresentacao/index.html", "w", encoding="utf-8") as f:
+PASTA = "/content/apresentacao"
+os.makedirs(PASTA, exist_ok=True)
+ARQUIVO = os.path.join(PASTA, "index.html")
+with open(ARQUIVO, "w", encoding="utf-8") as f:
     f.write(html)
 
-# 4) Sobe um servidor local e abre a página
-subprocess.run("fuser -k 8000/tcp", shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-subprocess.Popen(["python", "-m", "http.server", "8000", "--directory", "/content/apresentacao"],
-                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-time.sleep(1.5)
+# 4) Servidor dentro do próprio Colab, numa porta livre, conferido antes de abrir
+import threading, http.server
+from IPython.display import display, HTML
+from google.colab import files
+from google.colab.output import eval_js
+
+class Pagina(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *a, **k):
+        super().__init__(*a, directory=PASTA, **k)
+    def log_message(self, *a):
+        pass
+
+if "_servidor_apresentacao" in globals():
+    _servidor_apresentacao.shutdown()
+    _servidor_apresentacao.server_close()
+_servidor_apresentacao = http.server.ThreadingHTTPServer(("0.0.0.0", 0), Pagina)
+porta = _servidor_apresentacao.server_address[1]
+threading.Thread(target=_servidor_apresentacao.serve_forever, daemon=True).start()
+with urllib.request.urlopen(f"http://127.0.0.1:{porta}/index.html") as resp:
+    assert resp.status == 200 and marcador.split(" =")[0] in resp.read().decode("utf-8"), "Servidor não respondeu"
 
 print("Apresentação aberta com a", origem)
 if dados:
     print("Status:", dados["solucao"]["status"], "| Z =", dados["solucao"]["custo_total"], "mil créditos")
-print("Clique no link abaixo para abrir em TELA CHEIA numa nova aba (recomendado para apresentar):")
-output.serve_kernel_port_as_window(8000, path="/index.html")
+
+link = eval_js(f"google.colab.kernel.proxyPort({porta}, {{'cache': false}})").rstrip("/") + "/index.html"
+display(HTML(f'''<p><a href="{link}" target="_blank" style="display:inline-block;padding:10px 18px;border-radius:8px;
+background:#f5a623;color:#111;font-weight:700;text-decoration:none">▶ Abrir apresentação em TELA CHEIA (nova aba)</a></p>'''))
 print("Prévia embutida (clique dentro dela e use as setas ← →):")
-output.serve_kernel_port_as_iframe(8000, path="/index.html", height=720)
+output.serve_kernel_port_as_iframe(porta, path="/index.html", height=720)
+
+# 5) Cópia de segurança: baixa o HTML (abre com dois cliques, até sem internet)
+BAIXAR_COPIA = True
+if BAIXAR_COPIA:
+    copia = "/content/apresentacao_base_oculta.html"
+    with open(copia, "w", encoding="utf-8") as f:
+        f.write(html)
+    files.download(copia)
