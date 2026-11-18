@@ -100,7 +100,8 @@ export function corDoCusto(c) {
 const damp = (a, b, k, dt) => a + (b - a) * (1 - Math.exp(-k * dt));
 
 export function createScene(canvas, labelsEl, { lite = false, reduced = false } = {}) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !lite, powerPreference: 'high-performance' });
+  // Sem antialias: com o bloom ligado a cena é desenhada fora da tela e o MSAA do canvas só custaria desempenho.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, lite ? 1 : 1.75));
   renderer.setClearColor(0x03040a, 1);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -300,6 +301,9 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
     composer.addPass(new RenderPass(scene, camera));
     composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.6, 0.18));
     composer.addPass(new OutputPass());
+    // A cena com bloom é desenhada em resolução 1x mesmo em telas com escala (125%, 150%):
+    // quase dobra o desempenho em placas integradas; os textos são HTML e continuam nítidos.
+    composer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
   }
 
   function resize() {
@@ -388,19 +392,30 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
     }
     shipGeo.attributes.position.needsUpdate = true;
 
-    // qualidade adaptativa: se o computador não sustentar ~40 fps, desliga o bloom e reduz a resolução
+    // Qualidade adaptativa: só reage a lentidão CONTÍNUA (3 medições seguidas de 2 s abaixo de 30 fps).
+    // Degrau 1: reduz a resolução da cena mantendo o brilho. Degrau 2: desliga o brilho.
     fpsAcc += dt; fpsN++;
     if (fpsAcc < 0) fpsN = 0;
     if (fpsAcc > 2) {
       const fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
-      if (fps < 40 && composer) { composer = null; renderer.setPixelRatio(1); resize(); }
-      else if (fps < 30 && renderer.getPixelRatio() > 0.75) { renderer.setPixelRatio(0.75); resize(); }
+      lentas = fps < 30 ? lentas + 1 : 0;
+      if (lentas >= 3) {
+        lentas = 0;
+        if (composer && composer._pixelRatio > 0.75) { composer.setPixelRatio(0.75); resize(); console.info('qualidade: cena em 0.75x, brilho mantido'); }
+        else if (composer) { composer = null; renderer.setPixelRatio(1); resize(); console.info('qualidade: brilho desligado'); }
+        else if (renderer.getPixelRatio() > 0.75) { renderer.setPixelRatio(0.75); resize(); }
+      }
     }
 
     if (composer) composer.render(); else renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
-  let fpsAcc = -2, fpsN = 0; // ignora os 2 primeiros segundos (carregamento)
+  let fpsAcc = -5, fpsN = 0, lentas = 0; // ignora os 5 primeiros segundos (carregamento)
+  // trocar de aba, entrar em tela cheia ou redimensionar não conta como lentidão
+  const recomecarMedicao = () => { fpsAcc = -2; fpsN = 0; lentas = 0; };
+  renderer.compile(scene, camera); // prepara os shaders já na abertura (evita travadas na 1ª vez que algo aparece)
+  document.addEventListener('visibilitychange', recomecarMedicao);
+  window.addEventListener('resize', recomecarMedicao);
   requestAnimationFrame(frame);
 
   return {
