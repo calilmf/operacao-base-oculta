@@ -212,7 +212,7 @@ $('#resultados-painel').innerHTML = `
       ${BASES.map((b, i) => `<tr class="${OFICIAL.bases[i].aberta ? '' : 'apagada'}"><td>${b.nome}</td>${xMat[i].map((v, j) => `<td class="${v ? 'x-on' : ''}" ${v ? `style="--c:${hex(CUSTO[i][j])}"` : ''}>${v}</td>`).join('')}</tr>`).join('')}
       <tr class="tot"><td>Recebido</td>${FRENTES.map((f, j) => `<td>${xMat.reduce((s, r) => s + r[j], 0)}/${f.demanda}</td>`).join('')}</tr>
     </table>
-    <p class="mini" data-anim>No mapa: <b>espessura da rota e nº de naves = caixas</b> · <b>cor = custo por caixa</b></p>
+    <p class="mini" data-anim>No mapa: <b>a cor da rota indica o custo por caixa</b> (azul = barata, laranja = cara)</p>
   </div>
   <div class="passo" data-passo="2">
     <p class="kicker" data-anim>Resultado · função objetivo</p>
@@ -221,7 +221,7 @@ $('#resultados-painel').innerHTML = `
     <div class="total"><span>Z =</span><b id="contador">0</b><small>mil créditos</small></div>
     <p class="mini"><span class="hl a">montagem ${fmt(OFICIAL.custo_montagem)}</span> + <span class="hl b">transporte ${fmt(OFICIAL.custo_transporte)}</span></p>
   </div>`;
-$('#legenda-rotas').innerHTML = `<div><span class="grad"></span><small>custo/caixa: 2 → 9</small></div><div><small>espessura e nº de naves = caixas</small></div>`;
+$('#legenda-rotas').innerHTML = `<div><span class="grad"></span><small>custo por caixa: ${Math.min(...CUSTO.flat())} → ${Math.max(...CUSTO.flat())}</small></div>`;
 
 // --- Interpretação ---
 function balanca(d) {

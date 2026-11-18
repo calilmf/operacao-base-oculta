@@ -7,6 +7,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { BASES, FRENTES, CUSTO } from './data/problema.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const NOISE = /* glsl */ `
 vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -53,9 +54,18 @@ ${NOISE}
 void main(){
   vec3 q = normalize(vP);
   vec3 p = q * 2.1 + uSeed;
-  float n = uMode > 0.5 ? sin(q.y * 16.0 + fbm(p * 0.9) * 2.6) * 0.5 + 0.5 : fbm(p) * 0.5 + 0.5;
-  vec3 col = mix(uC1, uC2, smoothstep(0.32, 0.58, n));
-  col = mix(col, uC3, smoothstep(0.6, 0.82, n));
+  vec3 col;
+  if (uMode > 1.5) {
+    // oceano (uC1), continentes (uC2) e nuvens (uC3)
+    float terra = fbm(p * 0.8) * 0.5 + 0.5;
+    col = mix(uC1, uC2, smoothstep(0.5, 0.54, terra));
+    float nuvem = fbm(p * 1.6 + 7.0) * 0.5 + 0.5;
+    col = mix(col, uC3, smoothstep(0.56, 0.74, nuvem) * 0.85);
+  } else {
+    float n = uMode > 0.5 ? sin(q.y * 16.0 + fbm(p * 0.9) * 2.6) * 0.5 + 0.5 : fbm(p) * 0.5 + 0.5;
+    col = mix(uC1, uC2, smoothstep(0.32, 0.58, n));
+    col = mix(col, uC3, smoothstep(0.6, 0.82, n));
+  }
   vec3 N = normalize(vN);
   float diff = max(dot(N, normalize(uLight)), 0.0);
   col *= 0.16 + 1.0 * diff;
@@ -246,13 +256,22 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
   // ---------- Rotas da solução + naves (reconstruídas a cada solução) ----------
   const solGroup = new THREE.Group(); scene.add(solGroup);
   let solRotas = [];
-  const MAX_SHIPS = 400;
-  const shipGeo = new THREE.BufferGeometry();
+  // Naves: mesma quantidade em todas as rotas ativas (não representam número de caixas).
+  const NAVES_POR_ROTA = 3, MAX_SHIPS = 60;
+  const corpo = new THREE.ConeGeometry(0.22, 1.25, 8); corpo.rotateX(Math.PI / 2); // bico apontando para +Z
+  const asas = new THREE.BoxGeometry(1.25, 0.05, 0.4); asas.translate(0, 0, -0.3);
+  const naveGeo = mergeGeometries([corpo.toNonIndexed(), asas.toNonIndexed()]);
+  const shipMat = new THREE.MeshBasicMaterial({ color: 0x9fb0c8, transparent: true, opacity: 0, depthWrite: false });
+  const ships = new THREE.InstancedMesh(naveGeo, shipMat, MAX_SHIPS);
+  ships.frustumCulled = false; ships.count = 0; scene.add(ships);
+  // brilho do motor, logo atrás de cada nave
+  const motorGeo = new THREE.BufferGeometry();
   const shipPos = new Float32Array(MAX_SHIPS * 3);
-  shipGeo.setAttribute('position', new THREE.BufferAttribute(shipPos, 3));
-  const shipMat = new THREE.PointsMaterial({ size: 0.55, map: dot, color: 0xffffff, transparent: true, opacity: 0,
+  motorGeo.setAttribute('position', new THREE.BufferAttribute(shipPos, 3));
+  const motorMat = new THREE.PointsMaterial({ size: 0.6, map: dot, color: 0x7fd4ff, transparent: true, opacity: 0,
     depthWrite: false, blending: THREE.AdditiveBlending });
-  const ships = new THREE.Points(shipGeo, shipMat); ships.frustumCulled = false; scene.add(ships);
+  const motores = new THREE.Points(motorGeo, motorMat); motores.frustumCulled = false; scene.add(motores);
+  const naveObj = new THREE.Object3D();
   let shipList = [];
 
   let solucaoAtual = null;
@@ -281,17 +300,18 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
     sol.rotas.forEach((r) => {
       const i = BASES.findIndex((b) => b.nome === r.de), j = FRENTES.findIndex((f) => f.nome === r.para);
       const c = curva(BASES[i].pos, FRENTES[j].pos);
-      const raio = 0.05 + r.caixas * 0.0032; // espessura proporcional às caixas (X_ij)
+      const raio = 0.08; // espessura igual para todas as rotas ativas
       const mat = new THREE.MeshBasicMaterial({ color: corDoCusto(r.custo_unit), transparent: true, opacity: 0,
         depthWrite: false, blending: THREE.AdditiveBlending });
       const mesh = new THREE.Mesh(new THREE.TubeGeometry(c, 64, raio, 8), mat);
       solGroup.add(mesh);
       const lut = c.getSpacedPoints(120);
       solRotas.push({ ...r, i, j, mat, lut });
-      const n = Math.max(2, Math.round(r.caixas / 4)); // nº de naves proporcional às caixas
-      for (let k = 0; k < n; k++) shipList.push({ lut, fase: k / n + Math.random() * 0.02, vel: 0.07 + Math.random() * 0.02 });
+      const fase0 = Math.random();
+      for (let k = 0; k < NAVES_POR_ROTA; k++) shipList.push({ lut, fase: fase0 + k / NAVES_POR_ROTA, vel: 0.06 });
     });
-    shipGeo.setDrawRange(0, Math.min(shipList.length, MAX_SHIPS));
+    ships.count = Math.min(shipList.length, MAX_SHIPS);
+    motorGeo.setDrawRange(0, ships.count);
   }
 
   // ---------- Pós-processamento ----------
@@ -383,14 +403,25 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
 
     solRotas.forEach((r) => { r.mat.opacity = damp(r.mat.opacity, estado.sol * 0.9, 4, dt); });
     shipMat.opacity = damp(shipMat.opacity, estado.sol, 4, dt);
-    const n = Math.min(shipList.length, MAX_SHIPS);
+    motorMat.opacity = shipMat.opacity;
+    ships.visible = motores.visible = shipMat.opacity > 0.01;
+    const n = ships.count;
     for (let k = 0; k < n; k++) {
       const s = shipList[k];
       const u = (s.fase + t * s.vel) % 1;
-      const p = s.lut[Math.floor(u * (s.lut.length - 1))];
-      shipPos[k * 3] = p.x; shipPos[k * 3 + 1] = p.y; shipPos[k * 3 + 2] = p.z;
+      const ult = s.lut.length - 1;
+      const a = Math.floor(u * ult), b = Math.min(a + 1, ult), f = u * ult - a;
+      const p = tmp.copy(s.lut[a]).lerp(s.lut[b], f);
+      naveObj.position.copy(p);
+      naveObj.lookAt(s.lut[Math.min(a + 2, ult)]);
+      naveObj.updateMatrix();
+      ships.setMatrixAt(k, naveObj.matrix);
+      // motor 0,7 unidade atrás do centro, no sentido contrário ao voo
+      const tras = new THREE.Vector3(0, 0, -0.7).applyQuaternion(naveObj.quaternion).add(naveObj.position);
+      shipPos[k * 3] = tras.x; shipPos[k * 3 + 1] = tras.y; shipPos[k * 3 + 2] = tras.z;
     }
-    shipGeo.attributes.position.needsUpdate = true;
+    ships.instanceMatrix.needsUpdate = true;
+    motorGeo.attributes.position.needsUpdate = true;
 
     // Qualidade adaptativa: só reage a lentidão CONTÍNUA (3 medições seguidas de 2 s abaixo de 30 fps).
     // Degrau 1: reduz a resolução da cena mantendo o brilho. Degrau 2: desliga o brilho.
