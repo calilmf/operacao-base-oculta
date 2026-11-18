@@ -70,7 +70,7 @@ void main(){
   float diff = max(dot(N, normalize(uLight)), 0.0);
   col *= 0.16 + 1.0 * diff;
   float fres = pow(1.0 - max(dot(N, normalize(vV)), 0.0), 2.4);
-  col += uAtmo * fres * (0.45 + uFocus * 0.45);
+  col += uAtmo * fres * (0.75 + uFocus * 0.45);
   float g = dot(col, vec3(0.299, 0.587, 0.114));
   col = mix(col, vec3(g) * 0.28, uDim);
   gl_FragColor = vec4(col, 1.0);
@@ -139,6 +139,8 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
       pos[i * 3 + 2] = Math.sin(branch + spin) * r + rnd();
       const c = inner.clone().lerp(outer, r / R);
       if (Math.random() < 0.12) c.lerp(pink, 0.6);
+      // núcleo menos intenso: evita que o brilho do centro apague os planetas próximos (Dagobah, Yavin 4)
+      c.multiplyScalar(0.3 + 0.7 * THREE.MathUtils.smoothstep(r, 0, 22));
       col.set([c.r, c.g, c.b], i * 3);
     }
     const geo = new THREE.BufferGeometry();
@@ -208,6 +210,10 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
       depthWrite: false, blending: THREE.AdditiveBlending }));
     halo.scale.setScalar(d.raio * 4.2); halo.position.copy(mesh.position); scene.add(halo);
     halos.push(halo);
+    // aura colorida com mistura normal: tinge o fundo mesmo sobre o centro claro da galáxia
+    const aura = new THREE.Sprite(new THREE.SpriteMaterial({ map: dot, color: d.cores[1], transparent: true, opacity: 0.8,
+      depthWrite: false }));
+    aura.scale.setScalar(d.raio * 3.0); aura.position.copy(mesh.position); scene.add(aura);
 
     const label = document.createElement('div');
     label.className = `label label-${kind}`;
@@ -215,7 +221,7 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
       <strong>${d.nome}</strong><span class="label-info"></span>`;
     labelsEl.appendChild(label);
     const infoPre = kind === 'base' ? `montagem ${d.custo} · cap. ${d.cap}` : `demanda ${d.demanda} caixas`;
-    return { d, kind, idx, mesh, mat, halo, label, info: label.querySelector('.label-info'),
+    return { d, kind, idx, mesh, mat, halo, aura, label, info: label.querySelector('.label-info'),
       infoPre, infoRes: infoPre, clsRes: '', fase: null, dim: 0, focus: 0, labelOp: 0 };
   }
   const planets = [
@@ -379,6 +385,7 @@ export function createScene(canvas, labelsEl, { lite = false, reduced = false } 
       p.mat.uniforms.uDim.value = p.dim;
       p.mat.uniforms.uFocus.value = p.focus;
       p.halo.material.opacity = (0.3 + p.focus * 0.1) * (1 - p.dim * 0.85);
+      p.aura.material.opacity = (0.8 + p.focus * 0.1) * (1 - p.dim * 0.95);
       // rótulo HTML projetado na tela
       tmp.copy(p.mesh.position); tmp.y += p.d.raio + 0.6; tmp.project(camera);
       const vis = tmp.z < 1 && Math.abs(tmp.x) < 1.15 && Math.abs(tmp.y) < 1.15;
