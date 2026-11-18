@@ -121,7 +121,7 @@ $('#modelo-painel').innerHTML = `
       <div><b>Bases (i)</b>${BASES.map((b, i) => `<span>${i + 1} = ${b.nome}</span>`).join('')}</div>
       <div><b>Frentes (j)</b>${FRENTES.map((f, j) => `<span>${j + 1} = ${f.nome}</span>`).join('')}</div>
     </div>
-    ${eq('Y_1,\\ Y_2,\\ Y_3,\\ Y_4 \\in \\{0, 1\\}', 'abre (1) ou não (0) cada base — decisão de sim/não')}
+    ${eq('Y_1,\\ Y_2,\\ Y_3,\\ Y_4 \\in \\{0, 1\\}', 'abre (1) ou não (0) cada base, uma decisão de sim/não')}
     ${eq('X_{ij} \\in \\mathbb{Z},\\ X_{ij} \\ge 0', 'caixas enviadas da base i para a frente j')}
     <p class="mini" data-anim>Ex.: ${tex('X_{12}')} = caixas de Hoth para Naboo · ${tex('X_{35}')} = caixas de Dagobah para Lothal</p>
   </div>
@@ -151,7 +151,7 @@ $('#modelo-painel').innerHTML = `
       <div class="card" data-anim><b>Onde instalar</b><span>Decisão de sim/não → variável <b>binária</b> ${tex('Y_i')}. Não existe “meia base”.</span></div>
       <div class="card" data-anim><b>Como distribuir</b><span>Quantidade de caixas → variável <b>inteira</b> ${tex('X_{ij}')}. Não se envia meia caixa.</span></div>
     </div>
-    <p data-anim>Abrir base custa caro, mas abrir poucas deixa as rotas longas e caras. O modelo encontra o equilíbrio entre as duas coisas — exatamente o dilema do General Rodrigo.</p>
+    <p data-anim>Abrir base custa caro, mas abrir poucas deixa as rotas longas e caras. O modelo encontra o equilíbrio entre as duas coisas, exatamente o dilema do General Rodrigo.</p>
   </div>`;
 
 // --- Resolução ---
@@ -250,10 +250,10 @@ const conclusoesHTML = dilemas.map((d, k) => {
           <g class="prato c"><line x1="280" y1="40" x2="280" y2="78"/><path d="M245 78 h70 a35 14 0 0 1 -70 0z"/></g>
         </g>
       </svg>
-      <div class="pratos"><div class="e"><b>−${fmt(bl.economiza)}</b><span>economiza<br>${itemE.join('<br>') || '—'}</span></div>
-      <div class="c"><b>+${fmt(bl.custa)}</b><span>custa a mais<br>${itemC.join('<br>') || '—'}</span></div></div>
+      <div class="pratos"><div class="e"><b>−${fmt(bl.economiza)}</b><span>economiza<br>${itemE.join('<br>') || 'nada'}</span></div>
+      <div class="c"><b>+${fmt(bl.custa)}</b><span>custa a mais<br>${itemC.join('<br>') || 'nada'}</span></div></div>
     </div>
-    <p class="veredito" data-anim>Saldo: <b>+${fmt(d.dTotal)} mil créditos</b> (${fmt(d.F.custo_total)} contra ${fmt(OFICIAL.custo_total)}) → manter ${b.nome} fechada${d.dTotal <= 10 ? ' — <b>vitória por um triz!</b>' : '.'}</p>
+    <p class="veredito" data-anim>Saldo: <b>+${fmt(d.dTotal)} mil créditos</b> (${fmt(d.F.custo_total)} contra ${fmt(OFICIAL.custo_total)}) → manter ${b.nome} fechada${d.dTotal <= 10 ? '. <b>Vitória por um triz!</b>' : '.'}</p>
   </div>`;
 }).join('');
 
@@ -285,7 +285,7 @@ $('#conclusoes-painel').innerHTML = conclusoesHTML + `
     ${capInfo.map(({ b, s }) => `
       <div class="cap" data-anim><div class="cap-top"><b>${b.nome}</b><span>${s.enviado} / ${s.capacidade} caixas · ${Math.round((s.enviado / s.capacidade) * 100)}%</span></div>
       <div class="cap-barra"><i style="--p:${(s.enviado / s.capacidade) * 100}%"></i></div></div>`).join('')}
-    <p data-anim>Sobram <b>${folgaCap} caixas</b> de capacidade no total: margem para a demanda crescer sem abrir outra base. ${capInfo.map(({ b, s }) => (s.enviado / s.capacidade > 0.9 ? `${b.nome} está quase no limite — é a primeira a precisar de reforço.` : '')).join(' ')}</p>
+    <p data-anim>Sobram <b>${folgaCap} caixas</b> de capacidade no total: margem para a demanda crescer sem abrir outra base. ${capInfo.map(({ b, s }) => (s.enviado / s.capacidade > 0.9 ? `${b.nome} está quase no limite e é a primeira a precisar de reforço.` : '')).join(' ')}</p>
     <p class="mini" data-anim>Todas as ${FRENTES.length} frentes recebem 100% da demanda (${DEMANDA_TOTAL}/${DEMANDA_TOTAL} caixas).</p>
   </div>`;
 

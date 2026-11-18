@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Operação Base Oculta</title>
-  <meta name="description" content="Modelo de Programação Linear Inteira Mista para localização de bases e distribuição de suprimentos — trabalho de MMQD." />
+  <meta name="description" content="Modelo de Programação Linear Inteira Mista para localização de bases e distribuição de suprimentos. Trabalho de MMQD." />
   <script>window.SOLUCAO_COLAB = null;</script>
   <script type="module" crossorigin>(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const r of document.querySelectorAll('link[rel="modulepreload"]'))n(r);new MutationObserver(r=>{for(const a of r)if(a.type==="childList")for(const s of a.addedNodes)s.tagName==="LINK"&&s.rel==="modulepreload"&&n(s)}).observe(document,{childList:!0,subtree:!0});function t(r){const a={};return r.integrity&&(a.integrity=r.integrity),r.referrerPolicy&&(a.referrerPolicy=r.referrerPolicy),r.crossOrigin==="use-credentials"?a.credentials="include":r.crossOrigin==="anonymous"?a.credentials="omit":a.credentials="same-origin",a}function n(r){if(r.ep)return;r.ep=!0;const a=t(r);fetch(r.href,a)}})();/**
  * @license
@@ -4385,7 +4385,7 @@ void main(){ vec3 p = position; p.z += aEnd * uSpeed * 14.0; gl_Position = proje
       <div><b>Bases (i)</b>${st.map((i,e)=>`<span>${e+1} = ${i.nome}</span>`).join("")}</div>
       <div><b>Frentes (j)</b>${Pt.map((i,e)=>`<span>${e+1} = ${i.nome}</span>`).join("")}</div>
     </div>
-    ${Ds("Y_1,\\ Y_2,\\ Y_3,\\ Y_4 \\in \\{0, 1\\}","abre (1) ou não (0) cada base — decisão de sim/não")}
+    ${Ds("Y_1,\\ Y_2,\\ Y_3,\\ Y_4 \\in \\{0, 1\\}","abre (1) ou não (0) cada base, uma decisão de sim/não")}
     ${Ds("X_{ij} \\in \\mathbb{Z},\\ X_{ij} \\ge 0","caixas enviadas da base i para a frente j")}
     <p class="mini" data-anim>Ex.: ${ta("X_{12}")} = caixas de Hoth para Naboo · ${ta("X_{35}")} = caixas de Dagobah para Lothal</p>
   </div>
@@ -4415,7 +4415,7 @@ void main(){ vec3 p = position; p.z += aEnd * uSpeed * 14.0; gl_Position = proje
       <div class="card" data-anim><b>Onde instalar</b><span>Decisão de sim/não → variável <b>binária</b> ${ta("Y_i")}. Não existe “meia base”.</span></div>
       <div class="card" data-anim><b>Como distribuir</b><span>Quantidade de caixas → variável <b>inteira</b> ${ta("X_{ij}")}. Não se envia meia caixa.</span></div>
     </div>
-    <p data-anim>Abrir base custa caro, mas abrir poucas deixa as rotas longas e caras. O modelo encontra o equilíbrio entre as duas coisas — exatamente o dilema do General Rodrigo.</p>
+    <p data-anim>Abrir base custa caro, mas abrir poucas deixa as rotas longas e caras. O modelo encontra o equilíbrio entre as duas coisas, exatamente o dilema do General Rodrigo.</p>
   </div>`;const Mb=[["c","# Ana Gabs programa o droide estrategista"],["","model = pyo.ConcreteModel()"],["","model.Y = pyo.Var([1, 2, 3, 4], within=pyo.Binary)"],["","model.X = pyo.Var([1, 2, 3, 4], [1, 2, 3, 4, 5], within=pyo.NonNegativeIntegers)"],["",""],["",`obj_sum = (${st.map((i,e)=>`${i.custo}*model.Y[${e+1}]`).join(" + ")}`],["",`           + ${gi[0].slice(0,3).map((i,e)=>`${i}*model.X[1,${e+1}]`).join(" + ")} + ...`],["","model.obj = pyo.Objective(expr=obj_sum, sense=pyo.minimize)"],["",""],["",`model.C1 = pyo.Constraint(expr=model.X[1,1] + model.X[2,1] + model.X[3,1] + model.X[4,1] == ${Pt[0].demanda})`],["c","# ... C2 a C9: demanda e capacidade, todas escritas na forma literal"],["",`model.C10 = pyo.Constraint(expr=model.Y[1] + model.Y[2] + model.Y[3] + model.Y[4] <= ${Or})`],["",""],["","opt = SolverFactory('glpk')"],["","results = opt.solve(model)"]];qt("#resolucao-painel").innerHTML=`
   <div class="passo" data-passo="0">
     <p class="kicker" data-anim>Resolução · Python + Pyomo + GLPK</p>
@@ -4470,10 +4470,10 @@ void main(){ vec3 p = position; p.z += aEnd * uSpeed * 14.0; gl_Position = proje
           <g class="prato c"><line x1="280" y1="40" x2="280" y2="78"/><path d="M245 78 h70 a35 14 0 0 1 -70 0z"/></g>
         </g>
       </svg>
-      <div class="pratos"><div class="e"><b>−${kn(n.economiza)}</b><span>economiza<br>${r.join("<br>")||"—"}</span></div>
-      <div class="c"><b>+${kn(n.custa)}</b><span>custa a mais<br>${a.join("<br>")||"—"}</span></div></div>
+      <div class="pratos"><div class="e"><b>−${kn(n.economiza)}</b><span>economiza<br>${r.join("<br>")||"nada"}</span></div>
+      <div class="c"><b>+${kn(n.custa)}</b><span>custa a mais<br>${a.join("<br>")||"nada"}</span></div></div>
     </div>
-    <p class="veredito" data-anim>Saldo: <b>+${kn(i.dTotal)} mil créditos</b> (${kn(i.F.custo_total)} contra ${kn(zt.custo_total)}) → manter ${t.nome} fechada${i.dTotal<=10?" — <b>vitória por um triz!</b>":"."}</p>
+    <p class="veredito" data-anim>Saldo: <b>+${kn(i.dTotal)} mil créditos</b> (${kn(i.F.custo_total)} contra ${kn(zt.custo_total)}) → manter ${t.nome} fechada${i.dTotal<=10?". <b>Vitória por um triz!</b>":"."}</p>
   </div>`}).join(""),_i=zt.restricao_seguranca,Eb=Math.max(...st.map(i=>i.cap)),Mu=vo.map(i=>({b:st[i],s:zt.bases[i]})),Ab=Mu.reduce((i,e)=>i+e.s.capacidade-e.s.enviado,0);qt("#conclusoes-painel").innerHTML=Tb+`
   <div class="passo" data-passo="2">
     <p class="kicker" data-anim>Interpretação · o alerta da Giovana</p>
@@ -4495,7 +4495,7 @@ void main(){ vec3 p = position; p.z += aEnd * uSpeed * 14.0; gl_Position = proje
     ${Mu.map(({b:i,s:e})=>`
       <div class="cap" data-anim><div class="cap-top"><b>${i.nome}</b><span>${e.enviado} / ${e.capacidade} caixas · ${Math.round(e.enviado/e.capacidade*100)}%</span></div>
       <div class="cap-barra"><i style="--p:${e.enviado/e.capacidade*100}%"></i></div></div>`).join("")}
-    <p data-anim>Sobram <b>${Ab} caixas</b> de capacidade no total: margem para a demanda crescer sem abrir outra base. ${Mu.map(({b:i,s:e})=>e.enviado/e.capacidade>.9?`${i.nome} está quase no limite — é a primeira a precisar de reforço.`:"").join(" ")}</p>
+    <p data-anim>Sobram <b>${Ab} caixas</b> de capacidade no total: margem para a demanda crescer sem abrir outra base. ${Mu.map(({b:i,s:e})=>e.enviado/e.capacidade>.9?`${i.nome} está quase no limite e é a primeira a precisar de reforço.`:"").join(" ")}</p>
     <p class="mini" data-anim>Todas as ${Pt.length} frentes recebem 100% da demanda (${tr}/${tr} caixas).</p>
   </div>`;qt("#ese-painel").innerHTML=`
   <p class="kicker" data-anim>Laboratório do droide · e se...?</p>
@@ -4634,7 +4634,7 @@ void main(){ vec3 p = position; p.z += aEnd * uSpeed * 14.0; gl_Position = proje
           <p class="kicker" data-anim>Missão cumprida</p>
           <h2 class="fim" data-anim><span>Que a otimização</span> <span>esteja com vocês</span></h2>
           <p class="time" data-anim>General Rodrigo · Calil · Julia Paz · Vitor · Giovana · Ana Gabs</p>
-          <p class="nota centro" data-anim>Modelo: Python + Pyomo + GLPK · Apresentação: Three.js + GSAP<br />Trabalho de MMQD — Atividade Extra: Modelagem Criativa</p>
+          <p class="nota centro" data-anim>Modelo: Python + Pyomo + GLPK · Apresentação: Three.js + GSAP<br />Trabalho de MMQD (Atividade Extra: Modelagem Criativa)</p>
         </div>
       </div>
     </section>
